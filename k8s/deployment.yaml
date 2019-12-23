@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "demo"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "configserver"
+  namespace: "demo"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8888
+  selector:
+    app: "configserver"
+---
+# Source: demo/templates/deployment.yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "configserver"
+  namespace: "demo"
+  labels:
+    app: "configserver"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: "configserver"
+        version: "1"
+    spec:
+      containers:
+      - name: demo
+        image: agilesolutions/configserver:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8888
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "300Mi"
